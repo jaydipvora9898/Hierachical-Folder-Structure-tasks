@@ -27,20 +27,26 @@ function saveToLocalStorage() {
 
 function loadFromLocalStorage() {
     const data = JSON.parse(localStorage.getItem("folderData"));
+    // console.log(data);
     if (data) {
         folderData = data;
     }
+    // console.log(folderData);
     renderFolders();
 }
 
 loadFromLocalStorage();
 
 function findFolderById(id, folder) {
+    // console.log("ID:", id, "Folder:", folder);
     if (folder.id === id) return folder;
 
-    for (let child of folder.childrens) {
+    for (let i = 0; i < folder.childrens.length; i++) {
+        const child = folder.childrens[i];
+        // console.log("Child:", child);
         const found = findFolderById(id, child);
         if (found) return found;
+        // console.log("found:", found);
     }
     return null;
 }
@@ -49,7 +55,7 @@ function showFolderNameField() {
     if (!popupContainer || !popup) return;
     isRenameMode = false;
     pendingRenameId = null;
-    pendingParentId = folderData.id; // default to root
+    pendingParentId = folderData.id;
     if (popupLabel) popupLabel.textContent = "Create New Folder";
     if (folderNameInput) folderNameInput.value = "";
     if (folderNameError) folderNameError.classList.add("hidden");
@@ -80,9 +86,11 @@ function editFolderName(id) {
     if (!popupContainer || !popup) return;
     isRenameMode = true;
     pendingRenameId = id;
-    const f = findFolderById(id, folderData);
+    // console.log("pendingRenameId:", pendingRenameId);
+    const findFolderUsingId = findFolderById(id, folderData);
+    // console.log("findFolderUsingId:", findFolderUsingId);
     if (popupLabel) popupLabel.textContent = "Rename Folder";
-    if (folderNameInput) folderNameInput.value = f ? f.name : "";
+    if (folderNameInput) folderNameInput.value = findFolderUsingId ? findFolderUsingId.name : "";
     if (folderNameError) folderNameError.classList.add("hidden");
 
     popupContainer.classList.remove("hidden", "opacity-0", "pointer-events-none");
@@ -107,7 +115,9 @@ function popupRemove() {
 function handleCreateFromPopup() {
     if (!folderNameInput) return;
     const folderName = folderNameInput.value;
+    // console.log("folderName:", folderName);
     const validName = folderName && folderName.trim();
+    // console.log("validName:", validName);
     if (!validName) {
         if (folderNameError) folderNameError.classList.remove("hidden");
         return;
@@ -122,6 +132,7 @@ function handleCreateFromPopup() {
         }
     } else {
         const parentId = pendingParentId ?? folderData.id;
+        // console.log("parentId:", parentId);
         createFolder(parentId, validName);
     }
     popupRemove();
@@ -162,7 +173,7 @@ function createFolder(parentId, folderName) {
         childrens: [],
         expanded: true
     };
-
+    // console.log("newFolder:", newFolder);
     parentFolder.childrens.push(newFolder);
     saveToLocalStorage();
     renderFolders();
@@ -189,9 +200,9 @@ function renderFolder(folder) {
     iconWrap.className = "flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600";
     iconWrap.innerHTML = '<i class="ri-folder-fill"></i>';
 
-    const nameEl = document.createElement("div");
-    nameEl.className = "text-sm font-medium text-slate-800";
-    nameEl.textContent = folder.name;
+    const name = document.createElement("div");
+    name.className = "text-sm font-medium text-slate-800";
+    name.textContent = folder.name;
 
     const actions = document.createElement("div");
     actions.className = "ml-auto";
@@ -207,14 +218,16 @@ function renderFolder(folder) {
     delBtn.className = "rounded-full p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 transition";
     delBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
     delBtn.addEventListener("click", () => confirmDelete(folder.id));
+
     actions.appendChild(addBtn);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
     row.appendChild(toggleBtn);
     row.appendChild(iconWrap);
-    row.appendChild(nameEl);
+    row.appendChild(name);
     row.appendChild(actions);
+
     wrapper.appendChild(row);
 
     const childrenDiv = document.createElement("div");
@@ -269,6 +282,7 @@ function confirmDelete(id) {
 
 function removeFromTree(root, id) {
     const idx = root.childrens.findIndex((c) => c.id === id);
+    // console.log("idx:", idx);
     if (idx !== -1) {
         root.childrens.splice(idx, 1);
         return true;
