@@ -196,7 +196,7 @@ function renderFolder(folder) {
     }
 
     const iconWrap = document.createElement("div");
-    iconWrap.className = "flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600";
+    iconWrap.className = "flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-600";
     iconWrap.innerHTML = '<i class="ri-folder-fill"></i>';
 
     const name = document.createElement("div");
