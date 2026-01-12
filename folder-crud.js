@@ -289,23 +289,23 @@ function moveFolder(sourceId, targetId) {
     const targetNode = findFolderById(targetId, folderData);
     if (!targetNode) return;
     if (containsId(sourceNode, targetId)) return;
-    const detached = detachNode(folderData, sourceId);
-    if (!detached) return;
-    detached.parentId = targetId;
-    targetNode.childrens.push(detached);
+    const datached = datachNode(folderData, sourceId);
+    if (!datached) return;
+    datached.parentId = targetId;
+    targetNode.childrens.push(datached);
     targetNode.expanded = true;
     saveToLocalStorage();
     renderFolders();
 }
 
-function detachNode(root, id) {
-    const idx = root.childrens.findIndex((c) => c.id === id);
-    if (idx !== -1) {
-        const [node] = root.childrens.splice(idx, 1);
+function datachNode(root, id) {
+    const index = root.childrens.findIndex((c) => c.id === id);
+    if (index !== -1) {
+        const [node] = root.childrens.splice(index, 1);
         return node;
     }
     for (const child of root.childrens) {
-        const n = detachNode(child, id);
+        const n = datachNode(child, id);    
         if (n) return n;
     }
     return null;
