@@ -184,6 +184,25 @@ function renderFolder(folder) {
 
     const row = document.createElement("div");
     row.className = "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm";
+    row.setAttribute("draggable", "true");
+    row.dataset.id = String(folder.id);
+    row.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("sourceId", String(folder.id));
+    });
+    row.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        row.classList.add("ring-2", "ring-blue-300");
+    });
+    row.addEventListener("dragleave", () => {
+        row.classList.remove("ring-2", "ring-blue-300");
+    });
+    row.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const sourceId = Number(e.dataTransfer.getData("sourceId"));
+        const targetId = folder.id;
+        row.classList.remove("ring-2", "ring-blue-300");
+        moveFolder(sourceId, targetId);
+    });
 
     const toggleBtn = document.createElement("button");
     toggleBtn.className = "rounded p-1 text-slate-400 hover:text-slate-700";
@@ -262,6 +281,44 @@ function renderFolders() {
     });
 }
 
+function moveFolder(sourceId, targetId) {
+    if (!sourceId || !targetId) return;
+    if (sourceId === targetId) return;
+    const sourceNode = findFolderById(sourceId, folderData);
+    if (!sourceNode) return;
+    const targetNode = findFolderById(targetId, folderData);
+    if (!targetNode) return;
+    if (containsId(sourceNode, targetId)) return;
+    const detached = detachNode(folderData, sourceId);
+    if (!detached) return;
+    detached.parentId = targetId;
+    targetNode.childrens.push(detached);
+    targetNode.expanded = true;
+    saveToLocalStorage();
+    renderFolders();
+}
+
+function detachNode(root, id) {
+    const idx = root.childrens.findIndex((c) => c.id === id);
+    if (idx !== -1) {
+        const [node] = root.childrens.splice(idx, 1);
+        return node;
+    }
+    for (const child of root.childrens) {
+        const n = detachNode(child, id);
+        if (n) return n;
+    }
+    return null;
+}
+
+function containsId(root, id) {
+    if (root.id === id) return true;
+    for (const child of root.childrens) {
+        if (containsId(child, id)) return true;
+    }
+    return false;
+}
+
 function toggleFolder(id) {
     const f = findFolderById(id, folderData);
     if (f) {
@@ -291,7 +348,23 @@ function removeFromTree(root, id) {
     }
     return false;
 }
-
+function dragstartHandler(e){
+    e.dataTransfer.setData("text/plain", e.target.id);
+}
+function dragoverHandler(e){
+    e.preventDefault();
+}
+function dropHandler(e){
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    // console.log("id:", id);
+    const folder = findFolderById(id, folderData);
+    if (folder) {
+        folder.expanded = true;
+        saveToLocalStorage();
+        renderFolders();
+    }
+}
 window.showFolderNameField = showFolderNameField;
 window.popupRemove = popupRemove;
 window.confirmDelete = confirmDelete;
