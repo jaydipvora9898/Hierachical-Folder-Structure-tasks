@@ -13,6 +13,7 @@ const deleteFolderCancelButton = document.getElementById("deleteFolderCancelButt
 let pendingDeleteId = null;
 let pendingRenameId = null;
 let isRenameMode = false;
+let pendingParentId = null;
 
 let folderData = {
     id: 101,
@@ -48,6 +49,7 @@ function showFolderNameField() {
     if (!popupContainer || !popup) return;
     isRenameMode = false;
     pendingRenameId = null;
+    pendingParentId = folderData.id; // default to root
     if (popupLabel) popupLabel.textContent = "Create New Folder";
     if (folderNameInput) folderNameInput.value = "";
     if (folderNameError) folderNameError.classList.add("hidden");
@@ -56,6 +58,21 @@ function showFolderNameField() {
     popupContainer.classList.add("flex");
     popup.classList.remove("hidden");
 
+    if (folderNameInput) folderNameInput.focus();
+}
+
+function addSubfolder(parentId) {
+    if (!popupContainer || !popup) return;
+    isRenameMode = false;
+    pendingRenameId = null;
+    pendingParentId = parentId;
+    if (popupLabel) popupLabel.textContent = "Create Subfolder";
+    if (folderNameInput) folderNameInput.value = "";
+    if (folderNameError) folderNameError.classList.add("hidden");
+
+    popupContainer.classList.remove("hidden", "opacity-0", "pointer-events-none");
+    popupContainer.classList.add("flex");
+    popup.classList.remove("hidden");
     if (folderNameInput) folderNameInput.focus();
 }
 
@@ -104,7 +121,8 @@ function handleCreateFromPopup() {
             renderFolders();
         }
     } else {
-        createFolder(folderData.id, validName);
+        const parentId = pendingParentId ?? folderData.id;
+        createFolder(parentId, validName);
     }
     popupRemove();
 }
@@ -141,7 +159,8 @@ function createFolder(parentId, folderName) {
         id: Date.now(),
         parentId: parentId,
         name: folderName.trim(),
-        childrens: []
+        childrens: [],
+        expanded: true
     };
 
     parentFolder.childrens.push(newFolder);
@@ -156,6 +175,16 @@ function renderFolder(folder) {
     const row = document.createElement("div");
     row.className = "flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm";
 
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "rounded p-1 text-slate-400 hover:text-slate-700";
+    if (folder.childrens.length > 0) {
+        toggleBtn.innerHTML = folder.expanded === false ? '<i class="ri-arrow-right-s-line"></i>' : '<i class="ri-arrow-down-s-line"></i>';
+        toggleBtn.addEventListener("click", () => toggleFolder(folder.id));
+    } else {
+        toggleBtn.innerHTML = '<i class="ri-arrow-right-s-line opacity-30"></i>';
+        toggleBtn.disabled = true;
+    }
+
     const iconWrap = document.createElement("div");
     iconWrap.className = "flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600";
     iconWrap.innerHTML = '<i class="ri-folder-fill"></i>';
@@ -166,6 +195,10 @@ function renderFolder(folder) {
 
     const actions = document.createElement("div");
     actions.className = "ml-auto";
+    const addBtn = document.createElement("button");
+    addBtn.className = "rounded-full p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition";
+    addBtn.innerHTML = '<i class="ri-add-circle-line"></i>';
+    addBtn.addEventListener("click", () => addSubfolder(folder.id));
     const editBtn = document.createElement("button");
     editBtn.className = "rounded-full p-2 text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 transition";
     editBtn.innerHTML = '<i class="ri-edit-line"></i>';
@@ -174,9 +207,11 @@ function renderFolder(folder) {
     delBtn.className = "rounded-full p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 transition";
     delBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
     delBtn.addEventListener("click", () => confirmDelete(folder.id));
+    actions.appendChild(addBtn);
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
+    row.appendChild(toggleBtn);
     row.appendChild(iconWrap);
     row.appendChild(nameEl);
     row.appendChild(actions);
@@ -184,6 +219,9 @@ function renderFolder(folder) {
 
     const childrenDiv = document.createElement("div");
     childrenDiv.className = "ml-5 border-l border-slate-200 pl-4 space-y-2";
+    if (folder.expanded === false) {
+        childrenDiv.classList.add("hidden");
+    }
 
     folder.childrens.forEach(child => {
         childrenDiv.appendChild(renderFolder(child));
@@ -210,6 +248,15 @@ function renderFolders() {
     folderData.childrens.forEach((child) => {
         container.appendChild(renderFolder(child));     
     });
+}
+
+function toggleFolder(id) {
+    const f = findFolderById(id, folderData);
+    if (f) {
+        f.expanded = f.expanded === false ? true : false;
+        saveToLocalStorage();
+        renderFolders();
+    }
 }
 
 function confirmDelete(id) {
