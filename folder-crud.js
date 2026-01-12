@@ -1,4 +1,3 @@
-
 const container = document.getElementById("container");
 const popupContainer = document.getElementById("popupContainer");
 const popup = document.getElementById("popup");
