@@ -246,7 +246,7 @@ function renderFolders() {
     }
 
     folderData.childrens.forEach((child) => {
-        container.appendChild(renderFolder(child));     
+        container.appendChild(renderFolder(child));
     });
 }
 
@@ -276,7 +276,7 @@ function removeFromTree(root, id) {
     for (const child of root.childrens) {
         if (removeFromTree(child, id)) return true;
     }
-    return false;   
+    return false;
 }
 
 window.showFolderNameField = showFolderNameField;
