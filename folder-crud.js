@@ -102,11 +102,9 @@ function popupRemove() {
     if (!popupContainer) return;
     popupContainer.classList.add("opacity-0", "pointer-events-none");
     popupContainer.classList.remove("flex");
-    setTimeout(() => {
-        popupContainer.classList.add("hidden");
-        if (deleteContainer) deleteContainer.classList.add("hidden");
-        if (popup) popup.classList.remove("hidden");
-    }, 200);
+    popupContainer.classList.add("hidden");
+    if (deleteContainer) deleteContainer.classList.add("hidden");
+    if (popup) popup.classList.remove("hidden");
     isRenameMode = false;
     pendingRenameId = null;
 }
@@ -305,7 +303,7 @@ function datachNode(root, id) {
         return node;
     }
     for (const child of root.childrens) {
-        const n = datachNode(child, id);    
+        const n = datachNode(child, id);
         if (n) return n;
     }
     return null;
@@ -348,13 +346,13 @@ function removeFromTree(root, id) {
     }
     return false;
 }
-function dragstartHandler(e){
+function dragstartHandler(e) {
     e.dataTransfer.setData("text/plain", e.target.id);
 }
-function dragoverHandler(e){
+function dragoverHandler(e) {
     e.preventDefault();
 }
-function dropHandler(e){
+function dropHandler(e) {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain");
     // console.log("id:", id);
